@@ -1,0 +1,192 @@
+drop schema if exists transmusicales cascade;
+create schema "transmusicales";
+set schema 'transmusicales';
+
+
+create table _groupe_artiste (
+	id_groupe_artiste VARCHAR(10) not null,
+	nom_groupe_artiste VARCHAR(20) not null,
+	site_web VARCHAR(60),
+	debut INTEGER not null,
+	sortie_discographique INTEGER not null,
+	a_pour_origine VARCHAR(20) not null,
+	libelle VARCHAR(50) not null,
+	type_pr VARCHAR(30) not null,
+	type_po VARCHAR(30) not null,
+	constraint _groupe_artiste_pk primary key(id_groupe_artiste)
+);
+
+
+create table _annee (
+	an INTEGER not null,
+	constraint _annee_pk primary key (an)
+);
+
+
+create table _pays (
+	nom_p VARCHAR(20) not null,
+	constraint _pays_pk primary key (nom_p)
+);
+
+
+create table _ville (
+	nom_v VARCHAR(20) not null,
+	se_situe VARCHAR(20) not null,
+	constraint _ville_pk primary key (nom_v)
+);
+
+
+create table _edition (
+	nom_edition VARCHAR(20) not null,
+	annee_edition INTEGER not null,
+	constraint _edition_pk primary key (nom_edition)
+);
+
+
+create table _type_musique (
+	type_m VARCHAR(30) not null,
+  id_groupe_pr VARCHAR(10) not null,
+  id_groupe_po VARCHAR(10) not null,
+	constraint _type_musique_pk primary key(type_m)
+);
+
+
+create table _concert (
+	no_concert VARCHAR(10) not null,
+	titre VARCHAR(20) not null,
+	resume VARCHAR(50),
+	duree INTEGER not null,
+	tarif FLOAT not null,
+	se_deroule VARCHAR(20) not null,
+	est_de VARCHAR(30) not null,
+	constraint _concert_pk primary key(no_concert)
+);
+
+
+create table _lieu (
+	id_lieu VARCHAR(10) not null,
+	nom_lieu VARCHAR(30) not null,
+	accesPMR BOOLEAN not null,
+	capacite_max INTEGER not null,
+	type_lieu VARCHAR(30) not null,
+	dans VARCHAR(20) not null,
+	constraint _lieu_pk primary key (id_lieu)	
+);
+
+
+create table _formation (
+	libelle_formation VARCHAR(50) not null,
+	id_groupe VARCHAR(10) not null,
+  constraint _formation_pk primary key(libelle_formation)  
+);
+
+
+create table _type_principal (
+	type_m VARCHAR(30) not null,
+  id_groupe_artiste VARCHAR(10) not null
+);
+
+
+create table _type_ponctuel (
+	type_m VARCHAR(30) not null,
+  id_groupe_artiste VARCHAR(10) not null
+);
+
+
+
+create table _a_pour (
+	libelle_formation VARCHAR(50) not null,
+	id_groupe_artiste VARCHAR(10) not null
+);
+
+
+
+create table _representation (
+	numero_representation VARCHAR(10) not null,
+	heure VARCHAR(10) not null,
+	date_representation DATE not null,
+	a_lieu_dans VARCHAR(10) not null,
+  jouee_par VARCHAR(10) not null,
+	correspond_a VARCHAR(10) not null,
+	constraint _representation_pk primary key(numero_representation)
+);
+
+
+
+alter table _groupe_artiste add 
+  constraint _groupe_artiste_fk_debut
+		foreign key(debut) references _annee(an),
+		constraint _groupe_artiste_fk_sortie_discographique
+		foreign key(sortie_discographique) references _annee(an),
+  constraint _groupe_artiste_fk_a_pour_origine
+		foreign key(a_pour_origine) references _pays(nom_p),
+	constraint _formation_fk_libelle
+		foreign key(libelle) references _a_pour(libelle_formation),
+	constraint _formation_fk_type_pr
+		foreign key(type_pr) references _type_principal(type_m),
+	constraint _formation_fk_type_po
+		foreign key(type_po) references _type_ponctuel(type_m);
+		
+
+alter table _ville add
+  constraint _ville_fk_se_situe
+		foreign key(se_situe) references _pays(nom_p);
+		
+
+alter table _edition add
+  	constraint _edition_fk_annee_edition
+		  foreign key(annee_edition) references _annee(an);
+		
+
+alter table _type_musique add
+  constraint _type_musique_fk_id_groupe_pr
+		foreign key(id_groupe_pr) references _type_principal(id_groupe_artiste),
+	constraint _type_musique_fkid_groupe_po
+		foreign key(id_groupe_po) references _type_ponctuel(id_groupe_artiste);
+		
+		
+alter table _concert add
+  constraint _concert_fk_se_deroule
+		foreign key(se_deroule) references _edition(nom_edition),
+	constraint _concert_fk_est_de
+		foreign key(est_de) references _type_musique(type_m);
+
+
+alter table _lieu add
+  constraint _lieu_fk_dans
+		foreign key(dans) references _ville(nom_v);
+		
+
+alter table _formation add
+  constraint _formation_fk_id_groupe
+ 	  foreign key(id_groupe) references _a_pour(id_groupe_artiste);
+
+
+alter table _type_principal add
+  constraint _type_principal_fk_groupe_artiste
+		foreign key(id_groupe_artiste) references groupe_artiste(id_groupe_artiste),
+	constraint _type_principal_fk_type_musique
+		foreign key(type_m) references _type_musique(type_m);
+
+
+alter table _type_ponctuel add
+  constraint _type_ponctuel_fk_groupe_artiste
+		foreign key(id_groupe_artiste) references _groupe_artiste(id_groupe_artiste),
+	constraint _type_ponctuel_fk_type_musique
+		foreign key(type_m) references _type_musique(type_m);
+
+
+alter table _a_pour add
+	constraint _a_pour_fk_groupe_artiste
+		foreign key(id_groupe_artiste) references _groupe_artiste(id_groupe_artiste),
+	constraint _a_pour_fk_formation
+		foreign key(libelle_formation) references _formation(id_groupe_artiste);
+		
+
+alter table _representation add
+	constraint _representation_fk_a_lieu_dans
+		foreign key(a_lieu_dans) references _lieu(id_lieu),
+	constraint _representation_fk_jouee_par
+		foreign key(jouee_par) references _groupe_artiste(id_groupe_artiste),
+	constraint _representation_fk_correspond_a
+		foreign key(correspond_a) references _concert(no_concert);
